@@ -6,7 +6,10 @@ import requests
 from evidence_schema import (
     ConfidenceLevel,
     EvidenceCategory,
+    EvidenceCollection,
+    EvidenceContext,
     EvidenceItem,
+    EvidenceMapping,
     EvidenceSource,
     TargetProfile,
 )
@@ -62,49 +65,97 @@ def fetch_depmap_evidence(gene_symbol, use_builtin=True):
     common_essential = gene_data.get("common_essential", False)
 
     items.append(EvidenceItem(
+        target_id=gene_symbol.upper(),
         source=EvidenceSource.DEPMAP,
+        data_type="genetic_dependency",
         category=EvidenceCategory.ESSENTIALITY,
         feature_name="crispr_mean_dependency",
         value=mean_dep,
         score=dep_score_to_essentiality(mean_dep),
+        disease_context="cancer",
         confidence=ConfidenceLevel.HIGH,
+        confidence_score=0.9,
         description=f"Mean CRISPR dependency score across {total} cell lines: {mean_dep:.3f} (more negative = more essential)",
+        context_id=f"depmap_screen_{gene_symbol.upper()}",
+        collection_id="depmap_crispr",
         metadata={"mean_dep": mean_dep, "total_lines": total},
+        provenance={
+            "quality_tier": "high",
+            "replicated": True,
+            "sample_size": total,
+            "freshness_days": 120,
+        },
     ))
 
     dep_frac = n_dep / total if total > 0 else 0
     items.append(EvidenceItem(
+        target_id=gene_symbol.upper(),
         source=EvidenceSource.DEPMAP,
+        data_type="dependency_fraction",
         category=EvidenceCategory.ESSENTIALITY,
         feature_name="dependent_cell_line_fraction",
         value=dep_frac,
         score=dep_frac,
+        disease_context="cancer",
         confidence=ConfidenceLevel.HIGH,
+        confidence_score=0.85,
         description=f"{n_dep}/{total} cell lines ({dep_frac:.1%}) depend on {gene_symbol}",
+        context_id=f"depmap_screen_{gene_symbol.upper()}",
+        collection_id="depmap_crispr",
         metadata={"n_dependent": n_dep, "total_lines": total},
+        provenance={
+            "quality_tier": "high",
+            "replicated": True,
+            "sample_size": total,
+            "freshness_days": 120,
+        },
     ))
 
     sel = selectivity_score(n_dep, total)
     items.append(EvidenceItem(
+        target_id=gene_symbol.upper(),
         source=EvidenceSource.DEPMAP,
+        data_type="selectivity",
         category=EvidenceCategory.ESSENTIALITY,
         feature_name="selectivity_score",
         value=sel,
         score=sel,
+        disease_context="cancer",
         confidence=ConfidenceLevel.MEDIUM,
+        confidence_score=0.8,
         description=f"Selectivity score (1 = highly selective dependency): {sel:.3f}",
+        context_id=f"depmap_screen_{gene_symbol.upper()}",
+        collection_id="depmap_crispr",
         metadata={"selectivity": sel},
+        provenance={
+            "quality_tier": "medium",
+            "replicated": True,
+            "sample_size": total,
+            "freshness_days": 120,
+        },
     ))
 
     items.append(EvidenceItem(
+        target_id=gene_symbol.upper(),
         source=EvidenceSource.DEPMAP,
+        data_type="toxicity_risk",
         category=EvidenceCategory.ESSENTIALITY,
         feature_name="common_essential",
         value=common_essential,
         score=0.0 if common_essential else 0.7,
+        disease_context="cancer",
         confidence=ConfidenceLevel.HIGH,
+        confidence_score=0.9,
         description=f"{'IS' if common_essential else 'NOT'} a common essential gene. Common essentials are poor drug targets (toxic on inhibition).",
+        context_id=f"depmap_screen_{gene_symbol.upper()}",
+        collection_id="depmap_crispr",
         metadata={"common_essential": common_essential},
+        provenance={
+            "quality_tier": "high",
+            "replicated": True,
+            "sample_size": total,
+            "freshness_days": 120,
+        },
     ))
 
     logger.info("Fetched %d DepMap evidence items for %s", len(items), gene_symbol)
@@ -130,6 +181,32 @@ def try_fetch_depmap_api(gene_symbol):
 
 
 def populate_profile_from_depmap(profile, use_builtin=True):
+    profile.add_context(
+        EvidenceContext(
+            context_id=f"depmap_screen_{profile.gene_symbol}",
+            source=EvidenceSource.DEPMAP,
+            context_type="crispr_screen",
+            disease_context="cancer",
+            metadata={"provider": "depmap"},
+        )
+    )
+    profile.add_collection(
+        EvidenceCollection(
+            collection_id="depmap_crispr",
+            collection_type="screen_summary",
+            source=EvidenceSource.DEPMAP,
+            metadata={"provider": "depmap"},
+        )
+    )
+    profile.add_mapping(
+        EvidenceMapping(
+            source_key=profile.gene_symbol,
+            canonical_key=profile.gene_symbol,
+            mapping_type="symbol_identity",
+            metadata={"source": "depmap"},
+        )
+    )
+
     items = fetch_depmap_evidence(profile.gene_symbol, use_builtin=use_builtin)
     for item in items:
         profile.add_evidence(item)

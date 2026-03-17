@@ -1,0 +1,15 @@
+{
+  "TP53": {
+    "note": "Tumor suppressor context noted; keep score conservative for broad essentiality risk.",
+    "score_multiplier": 0.95,
+    "resolved_flags": []
+  },
+  "KRAS": {
+    "note": "Prioritize selective oncogenic dependency context for KRAS-mutant settings.",
+    "score_bonus": 0.02,
+    "category_multipliers": {
+      "essentiality": 1.1,
+      "disease_association": 1.05
+    }
+  }
+}

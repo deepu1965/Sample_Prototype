@@ -6,7 +6,10 @@ import requests
 from evidence_schema import (
     ConfidenceLevel,
     EvidenceCategory,
+    EvidenceCollection,
+    EvidenceContext,
     EvidenceItem,
+    EvidenceMapping,
     EvidenceSource,
     TargetDevelopmentLevel,
     TargetProfile,
@@ -90,54 +93,102 @@ def fetch_pharos_evidence(gene_symbol):
 
     tdl = target_data.get("tdl", "Unknown")
     items.append(EvidenceItem(
+        target_id=gene_symbol.upper(),
         source=EvidenceSource.PHAROS,
+        data_type="tractability",
         category=EvidenceCategory.DRUGGABILITY,
         feature_name="target_development_level",
         value=tdl,
         score=TDL_SCORES.get(tdl, 0.0),
+        disease_context="pan_disease",
         confidence=ConfidenceLevel.HIGH,
+        confidence_score=0.92,
         description=f"PHAROS Target Development Level: {tdl}",
+        context_id=f"pharos_target_{gene_symbol.upper()}",
+        collection_id="pharos_tractability",
         metadata={"tdl": tdl},
+        provenance={
+            "quality_tier": "high",
+            "replicated": True,
+            "sample_size": 1,
+            "freshness_days": 30,
+        },
     ))
 
     novelty = target_data.get("novelty")
     if novelty is not None:
         novelty_score = min(novelty / 10.0, 1.0) if novelty else 0.5
         items.append(EvidenceItem(
+            target_id=gene_symbol.upper(),
             source=EvidenceSource.PHAROS,
+            data_type="novelty",
             category=EvidenceCategory.DRUGGABILITY,
             feature_name="pharos_novelty",
             value=novelty,
             score=novelty_score,
+            disease_context="pan_disease",
             confidence=ConfidenceLevel.MEDIUM,
+            confidence_score=0.78,
             description=f"PHAROS novelty score: {novelty:.3f}",
+            context_id=f"pharos_target_{gene_symbol.upper()}",
+            collection_id="pharos_tractability",
             metadata={"novelty": novelty},
+            provenance={
+                "quality_tier": "medium",
+                "replicated": True,
+                "sample_size": 1,
+                "freshness_days": 45,
+            },
         ))
 
     fam = target_data.get("fam")
     if fam:
         items.append(EvidenceItem(
+            target_id=gene_symbol.upper(),
             source=EvidenceSource.PHAROS,
+            data_type="protein_family",
             category=EvidenceCategory.PROTEIN_STRUCTURE,
             feature_name="target_family",
             value=fam,
             score=FAMILY_SCORES.get(fam, 0.5),
+            disease_context="pan_disease",
             confidence=ConfidenceLevel.HIGH,
+            confidence_score=0.88,
             description=f"Target family: {fam}",
+            context_id=f"pharos_target_{gene_symbol.upper()}",
+            collection_id="pharos_structure",
             metadata={"family": fam},
+            provenance={
+                "quality_tier": "high",
+                "replicated": True,
+                "sample_size": 1,
+                "freshness_days": 30,
+            },
         ))
 
     desc = target_data.get("description")
     if desc:
         items.append(EvidenceItem(
+            target_id=gene_symbol.upper(),
             source=EvidenceSource.PHAROS,
+            data_type="functional_annotation",
             category=EvidenceCategory.PHENOTYPE,
             feature_name="function_description",
             value=desc[:300],
             score=0.5,
+            disease_context="pan_disease",
             confidence=ConfidenceLevel.HIGH,
+            confidence_score=0.85,
             description="PHAROS function description",
+            context_id=f"pharos_target_{gene_symbol.upper()}",
+            collection_id="pharos_annotation",
             metadata={"full_description": desc},
+            provenance={
+                "quality_tier": "high",
+                "replicated": True,
+                "sample_size": 1,
+                "freshness_days": 30,
+            },
         ))
 
     logger.info("Fetched %d PHAROS evidence items for %s", len(items), gene_symbol)
@@ -145,6 +196,48 @@ def fetch_pharos_evidence(gene_symbol):
 
 
 def populate_profile_from_pharos(profile):
+    profile.add_context(
+        EvidenceContext(
+            context_id=f"pharos_target_{profile.gene_symbol}",
+            source=EvidenceSource.PHAROS,
+            context_type="target_profile",
+            disease_context="pan_disease",
+            metadata={"provider": "pharos"},
+        )
+    )
+    profile.add_collection(
+        EvidenceCollection(
+            collection_id="pharos_tractability",
+            collection_type="knowledge_base",
+            source=EvidenceSource.PHAROS,
+            metadata={"provider": "pharos"},
+        )
+    )
+    profile.add_collection(
+        EvidenceCollection(
+            collection_id="pharos_structure",
+            collection_type="knowledge_base",
+            source=EvidenceSource.PHAROS,
+            metadata={"provider": "pharos"},
+        )
+    )
+    profile.add_collection(
+        EvidenceCollection(
+            collection_id="pharos_annotation",
+            collection_type="knowledge_base",
+            source=EvidenceSource.PHAROS,
+            metadata={"provider": "pharos"},
+        )
+    )
+    profile.add_mapping(
+        EvidenceMapping(
+            source_key=profile.gene_symbol,
+            canonical_key=profile.gene_symbol,
+            mapping_type="symbol_identity",
+            metadata={"source": "pharos"},
+        )
+    )
+
     items = fetch_pharos_evidence(profile.gene_symbol)
     for item in items:
         profile.add_evidence(item)
