@@ -20,19 +20,18 @@ This project now goes beyond a toy pipeline and implements your two PDFs directl
 If your original objective was: *"build a small concrete prototype using real data sources and test conflict handling in practice"*, this repository satisfies that objective.
 
 
-## Task Readiness Checklist (Against Your Original Ask)
+## Task Readiness Checklist 
 
 | Requirement | Status | Evidence in repo |
 |---|---|---|
-| Structured evidence schema | ✅ Complete | `evidence_schema.py` (`EvidenceItem`, `EvidenceContext`, `EvidenceCollection`, `EvidenceMapping`, `TargetProfile`) |
-| Integrate real data sources (DepMap / Open Targets / PHAROS) | ✅ Complete | `source_depmap.py`, `source_opentargets.py`, `source_pharos.py` |
-| Source-aware evidence aggregation | ✅ Complete | `pipeline.py` + provenance-aware score handling |
-| Conflict handling in practice | ✅ Complete | `conflict_resolution.py` (L1/L2/L3) |
-| Human-in-the-loop conflict resolution | ✅ Complete | `human_review_overrides.json` + layer-3 logic |
-| Stress testing and conflict behavior validation | ✅ Complete | `stress_test_conflicts.py` (`--mode synthetic` + `--mode hybrid`) |
-| Clear documentation with architecture diagrams | ✅ Complete | This README |
+| Structured evidence schema | Complete | `evidence_schema.py` (`EvidenceItem`, `EvidenceContext`, `EvidenceCollection`, `EvidenceMapping`, `TargetProfile`) |
+| Integrate real data sources (DepMap / Open Targets / PHAROS) |  Complete | `source_depmap.py`, `source_opentargets.py`, `source_pharos.py` |
+| Source-aware evidence aggregation |  Complete | `pipeline.py` + provenance-aware score handling |
+| Conflict handling in practice |  Complete | `conflict_resolution.py` (L1/L2/L3) |
+| Human-in-the-loop conflict resolution |  Complete | `human_review_overrides.json` + layer-3 logic |
+| Stress testing and conflict behavior validation |  Complete | `stress_test_conflicts.py` (`--mode synthetic` + `--mode hybrid`) |
+| Clear documentation with architecture diagrams |  Complete | This README |
 
-**Submission verdict:** ✅ **Ready**, with implementation and validation aligned to your two design PDFs.
 
 
 ## What Does This Do?
