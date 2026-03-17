@@ -171,11 +171,11 @@ Open Targets provides target-disease association evidence integrated from geneti
 
 ## Conflict Resolution Framework
 
-This implementation follows your 3-layer idea directly.
+This implementation follows the 3-layer idea directly.
 
-### Mapping from your two PDFs to implementation
+### Idea Implementation
 
-| PDF idea | Implementation in this repository |
+| idea | Implementation in this repository |
 |---|---|
 | Standardized but flexible schema for new sources | `evidence_schema.py` with shared `EvidenceItem` contract |
 | Source-aware hierarchical design (contexts, collections, mappings) | `EvidenceContext`, `EvidenceCollection`, `EvidenceMapping` |
